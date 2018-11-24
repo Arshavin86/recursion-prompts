@@ -556,7 +556,21 @@ var compress = function(list) {
   if (list.length === 0) {
     return array;
   }
-  if (list[0] !== array[array.length-1]) {
+  if (list.length === 1) {
+    array.push(list[0]);
+    return array;
+  }
+  // input: [1,2,2,3,4,4,5,5,5]
+  // output: [];
+  // 1 !== 2 ==>  [1]; recurse ([2,2,3,4,4,5,5,5])
+  // 2 === 2 ==> recurse ([2,3,4,4,5,5,5])
+  // 2 !== 3 ==> [2] recurse ([3,4,4,5,5,5])
+  // 3 !== 4 ==> [3] recurse ([4,4,5,5,5])
+  // 4 === 4 ==> recurse ([4,5,5,5])
+  // 4 !== 5 ==> [4] recurse ([5,5,5])
+  // 5 === 5 ==> recurse ([5,5])
+  // input.length === 1 ==> [5]
+  if (list[0] !== list[1]) {
     array.push(list[0])
   }
   return array.concat(compress(list.slice(1)));
@@ -576,10 +590,23 @@ var augmentElements = function(array, aug) {
 };
 
 // 34. Reduce a series of zeros to a single 0.
-// minimizeZeroes([2,0,0,0,1,4]) // [2,0,1,4]
+// minimizeZeroes([2,0,0,0,1,1,4]) // [2,0,1,1,4]
 // minimizeZeroes([2,0,0,0,1,0,0,4]) // [2,0,1,0,4]
 var minimizeZeroes = function(array) {
-
+  var newArray = [];
+  if (array.length === 0) {
+    return newArray;
+  }
+  if (array.length === 1) {
+    newArray.push(array[0]);
+    return newArray;
+  }
+  if (array[0] !== 0) {
+    newArray.push(array[0]);
+  } else if (array[0] !== array[1]) {
+    newArray.push(array[0]);
+  }
+  return newArray.concat(minimizeZeroes(array.slice(1)));
 };
 
 // 35. Alternate the numbers in an array between positive and negative regardless of
@@ -587,21 +614,87 @@ var minimizeZeroes = function(array) {
 // alternateSign([2,7,8,3,1,4]) // [2,-7,8,-3,1,-4]
 // alternateSign([-2,-7,8,3,-1,4]) // [2,-7,8,-3,1,-4]
 var alternateSign = function(array) {
-
+  var newArray = [];
+  if (array.length === 0) {
+    return newArray;
+  }
+  if (array.length === 1) {
+    if (array[0] < 0) {
+          newArray.push(array[0]*-1);
+    } else{
+      newArray.push(array[0]);
+    }
+    return newArray;
+  }
+  if (array[0] > 0 && array[1] > 0) {
+    newArray.push(array[0]);
+    newArray.push(array[1]*-1);
+  } else if (array[0] > 0 && array[1] < 0){
+    newArray.push(array[0]);
+    newArray.push(array[1]);
+  } else if (array[0] < 0 && array[1] < 0) {
+    newArray.push(array[0]*-1);
+    newArray.push(array[1]);
+  } else {
+    newArray.push(array[0]*-1);
+    newArray.push(array[1]*-1);
+  }
+  return newArray.concat(alternateSign(array.slice(2)));
 };
 
 // 36. Given a string, return a string with digits converted to their word equivalent.
 // Assume all numbers are single digits (less than 10).
 // numToText("I have 5 dogs and 6 ponies"); // "I have five dogs and six ponies"
 var numToText = function(str) {
-
+  // create an object with key-value pairs: digit: word ("5": "five")
+  var digits = {
+    '0': 'zero',
+    '1': 'one',
+    '2': 'two',
+    '3': 'three',
+    '4': 'four',
+    '5': 'five',
+    '6': 'six',
+    '7': 'seven',
+    '8': 'eight',
+    '9': 'nine'
+  };
+  var converted = '';
+  // check if str[0] === object key, if it does ==> concat object value with an output str;
+  if (str.length === 0) {
+    return converted;
+  }
+  if (digits.hasOwnProperty(str[0])) {
+    converted = converted.concat(digits[str[0]]);
+    // console.log(digits[str[0]])
+  } else {
+    converted = converted.concat(str[0]);
+  }
+  // recurse with sliced str.
+  return converted.concat(numToText(str.slice(1)));
 };
 
 
 // *** EXTRA CREDIT ***
 
 // 37. Return the number of times a tag occurs in the DOM.
-var tagCount = function(tag, node) {
+var tagCount = function(tag, node) { // How can it work with 1 argument?!!!!!!
+  var count = 0;
+  if (node.localName === tag) {
+    count ++;
+  }
+  if (node.children.length === 0) {
+    return count;
+  }
+
+  for (var i = 0; i < node.children.length; i++) {
+    if (node.children[i].localName === tag) {
+      count ++;
+    }
+    if (node.children[i].children.length !== 0) {
+      return count + tagCount(tag, node.children[i]);
+    }
+  }
 };
 
 // 38. Write a function for binary search.
@@ -609,7 +702,32 @@ var tagCount = function(tag, node) {
 // binarySearch(array, 5) // 5
 // https://www.khanacademy.org/computing/computer-science/algorithms/binary-search/a/binary-search
 var binarySearch = function(array, target, min, max) {
+  //input: array = [1,2,3,4,5,6]; target = 4, min && max = undefined;
+//1 step: minimum = 0, maximum = 5; array[Math.floor((minimum+maximum)/2)] = 2 < target; recurse (array, target, 2, 5)
+// 2 step: minimum = 2, maximum = 5; array[Math.floor((minimum+maximum)/2)] = 4 = target; return 3;
+  var index;
+  var minimum = min || 0;
+  var maximum = max || array.length-1;
+
+  if (array[minimum] === target) {
+    return minimum;
+  } else if (array[maximum] === target) {
+    return maximum;
+  } else if (maximum - minimum === 1) {
+    return null;
+  }
+
+  if (array[Math.floor((minimum+maximum)/2)] === target) {
+    return Math.floor((minimum+maximum)/2);
+  } else {
+    if (array[Math.floor((minimum+maximum)/2)] > target) {
+      return binarySearch (array, target, minimum, Math.floor((minimum+maximum)/2));
+    } else {
+      return binarySearch (array, target, Math.floor((minimum+maximum)/2), maximum);
+    }
+  }
 };
+
 
 // 39. Write a merge sort function.
 // mergeSort([34,7,23,32,5,62]) // [5,7,23,32,34,62]
@@ -623,4 +741,32 @@ var mergeSort = function(array) {
 // console.log(obj2); // {a:1,b:{bb:{bbb:2}},c:3}
 // obj1 === obj2 // false
 var clone = function(input) {
+  if (Array.isArray(input)) {
+    var array = [];
+    if (input.length === 0) {
+      return array;
+    }
+    for (var i = 0; i < input.length; i++) {
+      if (typeof input[i] !== 'object' ) {
+        array.push(input[i])
+      } else {
+        array.push(clone(input[i]));
+      }
+    }
+    return array;
+  } else {
+    var obj = {};
+    if (Object.keys(input).length === 0) {
+      return obj;
+    }
+    for (var key in input) {
+      if (typeof input[key] === 'number') {
+        obj[key] = input[key];
+      } else {
+        obj[key] = clone(input[key]);
+      }
+    }
+    return obj;
+  }
 };
+
