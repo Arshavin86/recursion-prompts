@@ -205,11 +205,14 @@ var multiply = function(x, y) {
     result += x;
     return result += multiply (x, y-1);
   } else if (x > 0 && y < 0) {
-    result += x;
-    return result += multiply (x, y+1);
-  } else if (x < 0 && y < 0) { // ?????????????? -2*-2 should return 4. But test shows 0 instead.
     result -= x;
-    return result -= multiply (x, y+1);
+    return result += multiply (x, y+1);
+  } else if (x < 0 && y < 0) {
+    result -= x;
+    return result += multiply (x, y+1);
+  } else {
+    result += x;
+    return result += multiply (x, y-1);
   }
 };
 
@@ -525,7 +528,7 @@ var flatten = function(array) {
       newArray.push(array[i]);
     }
     if (typeof array[i] === 'object') {
-      newArray.concat(flatten(array[i]));
+      newArray = newArray.concat(flatten(array[i])); // you have to assign newArray to newArray.concat!!!
   }
 }
   return newArray;
